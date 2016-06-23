@@ -90,7 +90,7 @@
         }
         .info {
             padding: 6px 8px;
-            font-size: 1em;
+            font-size: .9em;
             background: rgba(255,255,255,0.8);
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             border-radius: 5px;
@@ -99,6 +99,17 @@
         .info h3 {
             margin: 0;   
         }
+        .facts {
+            padding: 6px 8px;
+            font-size: .9em;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            text-align: right;   
+        }
+        .facts h3 {
+            margin: 0; }
+        
         .legend .circle {
         border-radius: 50%;
         width: 20px;
@@ -114,7 +125,7 @@
 <body>
     <header>
         <h1>Comparative Demographics</h1>
-        <h2> Assessing BPS School and Neighborhood Demographics</h2>
+        <h2> Assessing Boston School and Neighborhood Segregation</h2>
     </header>
 
     
@@ -136,9 +147,11 @@
 
     <footer>
         <p>Map authored by Laura Brown</p>
-        <p>Map Data from American Fact Finder(http://factfinder.census.gov/); 2010 Census, SF1.</p>
-        <p>This map compares school racial and ethnic demographics and performance alongside neighborhood composition. The three concentric circles compare various indices of school health: tier (academic performance as determined by MCAS testing); level (an assessment that measures how well the performance gap between groups is being narrowed); diversity index (Shannon Index) as to measure level of integration of school. All circles are categorized by quartiles: yellow for top 25% of BPS schools, red for bottom 25% of BPS school. Level and Tier information provided by 2015 Accountability Reports and BPS data (http://profiles.doe.mass.edu/state_report/accountability.aspx). School profiles can be found at (http://www.bostonpublicschools.org/Page/628)
+        
+        <p>This map compares school racial and ethnic demographics and performance alongside neighborhood composition. The three concentric circles compare various indices of school health: tier (academic performance as determined by MCAS testing); level (an assessment that measures how well the performance gap between groups is being narrowed); diversity index (Shannon Index) as to measure level of integration of school. All circles are categorized by quartiles: yellow for top 25% of BPS schools, red for bottom 25% of BPS school. Level and Tier information provided by 2015 Accountability Reports and BPS data (http://profiles.doe.mass.edu/state_report/accountability.aspx). School profiles can be found at (http://www.bostonpublicschools.org/Page/628). Diverstiy Index calculated from race and ethnicity demographics by author. 
         </p>
+        
+        <p>Census Data from American Fact Finder(http://factfinder.census.gov/); 2010 Census, SF1.</p>
     </footer>
 
 
@@ -172,7 +185,7 @@
          
             drawMap(raceData, bpsData);
 
-          
+          drawInfo(raceData);
             
              
              });
@@ -202,11 +215,24 @@
                             fillColor: '#1f78b4'
                         };
             
-                    }          
+                    
+                    }
+                        
             }).addTo(map);
        
 
-                              
+//          var raceLayer=L.geoJson(raceData, {
+//              
+//                     dataLayer.eachlayer(function(layer {
+//                                         
+//                      var props = layer.feature.properties;
+//                                         
+//                        layer.on("mouseover", function () {
+//                            updateInfo(this);
+//           }); 
+//    }));
+//          }); 
+                                                       
 
            var schoolsLevel = L.geoJson(bpsData, {
                     pointToLayer: function(feature, layer) {
@@ -268,10 +294,54 @@
         
         buildUI();
         drawLegend();
+        
+        drawFacts();
       
     }
-                     
-     function calcRadius(val){
+    
+//        function myImage() {
+//    var x = document.createElement("IMG");
+//    x.setAttribute("src", "circles.jpg");
+//    x.setAttribute("width", "304");
+//    x.setAttribute("width", "228");
+//    x.setAttribute("alt", "Circle Legend");
+//    document.body.appendChild(x);
+//}                 
+   
+    
+    function drawInfo() {
+    
+        var info=L.control({position: 'topright'});
+        info.onAdd= function(map){
+            
+            var div= L.DomUtil.create('div', 'info');
+            
+            return div;
+        }
+        
+        info.addTo(map);
+        $(".info").hide();
+        
+        
+    }
+    
+    function drawFacts(){
+    
+        var facts=L.control({position: 'bottomright'});
+        facts.onAdd= function(map){
+            
+            var div= L.DomUtil.create('div', 'facts');
+             div.innerHTML = "<h3>" + "Boston Public Schools Facts" + "</h3>";
+            div.innerHTML += "<h3>" + "$50 Million Dollar Projected 2017 Deficit" + "</h3>";
+            div.innerHTML += "<h3>" + "50% Students Below Poverty" + "</h3>";
+            div.innerHTML += "<h3>" + "50% English Language Learners" + "</h3>";
+            return div;
+        }
+       
+        facts.addTo(map);
+    }
+    
+    function calcRadius(val){
          var radius = Math.sqrt(val/Math.PI);
          return radius * 2
          
@@ -290,12 +360,33 @@
         layer.setStyle({   //leaflet function to set the style of the counties to that determined by color breaks
             fillColor: originalColor,
             fillOpacity: .6
-            });   
+            });  
+          
+          
+        layer.on("mouseover", function () {
+            $(".info").show();
+            updateInfo(this);
+           });
+          layer.on("mouseout", function () {
+            $(".info").hide();
+                            
         });
         
-        
+      });
     }
 
+function updateInfo(layer){
+    
+    var props = layer.feature.properties;
+    
+    var html="<h3>"+ "<b> Census Tract Demographics</b></br>"+
+                            "<b>Black: "+ props["percent_black"]+"%</b></br>"+
+                           "<b>White: "+ props["percent_white"]+"%</b></br>"+
+                           "<b>Asian: "+ props["percent_asian"]+"%</b></br>"+
+                           "<b>Hispanic: "+ props["percent_hispanic"]+"%</b>"
+
+    $(".info").html(html);
+}
 
     
 
@@ -365,7 +456,7 @@
     
 
     
-     function buildUI(raceData, bpsData) {   
+function buildUI(raceData, bpsData) {   
          //builds a selection will, using jquery to complete the change from one data layer to another
          
         $('select[id="race"]').change(function() {
@@ -431,9 +522,11 @@ function drawLegend() {
                         '<label>'+ " School Assessment"  + "<label>";
                 
                 div.innerHTML += 
-                        '<span class="circle" style="background:' + "gray" + '"></span> ' +
+                        '<img src="circles.jpg"  width="220" height="42">'  
                 
-                        '<label>'+ " (outer) Tier/Level/Diversity (inner)" + "<label>";
+                div.innerHTML += 
+                   
+                        '<label>'+ "<label>"
                 
                 div.innerHTML+=
                     '<span style="background:' + '#ffff00' + '"></span> ' +
@@ -464,6 +557,7 @@ function drawLegend() {
             // add the legend to the map
             legend.addTo(map);
             
+    
         }
 
 
